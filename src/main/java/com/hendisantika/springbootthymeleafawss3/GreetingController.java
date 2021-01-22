@@ -39,4 +39,10 @@ public class GreetingController {
         return mv;
     }
 
+    @GetMapping("/index")
+    public ModelAndView renderUploadPage() {
+        //System.out.println(accesskey  + bucketName + secretkey);
+        return new ModelAndView("uploadFiles");
+    }
+
 }
