@@ -3,6 +3,8 @@ package com.hendisantika.springbootthymeleafawss3;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,4 +31,12 @@ public class GreetingController {
     public String hello() {
         return "hello";
     }
+
+    @GetMapping("/greeting")
+    public ModelAndView greeting(@RequestParam(name = "name", required = true) String name) {
+        ModelAndView mv = new ModelAndView("greeting");
+        mv.addObject("name", name + "lol");
+        return mv;
+    }
+
 }
