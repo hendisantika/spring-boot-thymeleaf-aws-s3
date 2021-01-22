@@ -2,6 +2,7 @@ package com.hendisantika.springbootthymeleafawss3;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,4 +24,9 @@ public class GreetingController {
 
     @Value("${bucketName}")
     String bucketName;
+
+    @GetMapping("/")
+    public String hello() {
+        return "hello";
+    }
 }
