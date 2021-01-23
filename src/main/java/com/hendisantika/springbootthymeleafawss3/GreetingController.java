@@ -1,13 +1,8 @@
 package com.hendisantika.springbootthymeleafawss3;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.hendisantika.springbootthymeleafawss3.service.StorageService;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,8 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -27,17 +20,14 @@ import java.io.IOException;
  * Date: 23/01/21
  * Time: 05.56
  */
+@Log4j2
 @Controller
 public class GreetingController {
-    // @Value("#{environment.accesskey}")
-    @Value("${accessKey}")
-    String accesskey;
-
-    @Value("${secretKey}")
-    String secretkey;
-
-    @Value("${bucketName}")
+    @Value("${application.bucket.name}")
     String bucketName;
+
+    @Autowired
+    private StorageService service;
 
     @GetMapping("/")
     public String hello() {
@@ -53,38 +43,20 @@ public class GreetingController {
 
     @GetMapping("/index")
     public ModelAndView renderUploadPage() {
-        //System.out.println(accesskey  + bucketName + secretkey);
         return new ModelAndView("uploadFiles");
     }
 
     @PostMapping(value = "/upload")
     public ModelAndView uploadS3(@RequestParam("photo") MultipartFile image, @RequestParam(name = "desc") String desc) {
         ModelAndView returnPage = new ModelAndView();
-        System.out.println("description      " + desc);
-        System.out.println(image.getOriginalFilename());
+        log.info("description      " + desc);
+        log.info(image.getOriginalFilename());
 
-        BasicAWSCredentials cred = new BasicAWSCredentials(accesskey, secretkey);
-        // AmazonS3Client client=AmazonS3ClientBuilder.standard().withCredentials(new
-        // AWSCredentialsProvider(cred)).with
-        AmazonS3 client = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(cred))
-                .withRegion(Regions.US_EAST_1).build();
-        try {
-            PutObjectRequest put = new PutObjectRequest(bucketName, image.getOriginalFilename(),
-                    image.getInputStream(), new ObjectMetadata()).withCannedAcl(CannedAccessControlList.PublicRead);
-            client.putObject(put);
-
-            String imgSrc = "http://" + bucketName + ".s3.amazonaws.com/" + image.getOriginalFilename();
-
-            returnPage.setViewName("showImage");
-            returnPage.addObject("name", desc);
-            returnPage.addObject("imgSrc", imgSrc);
-
-            //Save this in the DB.
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            returnPage.setViewName("error");
-        }
+        String imgName = service.uploadFile(image);
+        String imgSrc = "http://" + bucketName + ".s3-ap-southeast-1.amazonaws.com/" + imgName;
+        returnPage.setViewName("showImage");
+        returnPage.addObject("name", desc);
+        returnPage.addObject("imgSrc", imgSrc);
         return returnPage;
 
     }
